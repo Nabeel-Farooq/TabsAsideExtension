@@ -1,0 +1,46 @@
+<!-- Versione in testo semplice (Chrome/Edge) -->
+
+Radicata nella funzionalità originale del browser Microsoft Edge, questa estensione è cresciuta molto più di un semplice spazio di archiviazione temporaneo per le schede.
+
+Ti consente di salvare e gestire le tue schede in modo conveniente, fornendo una gamma di funzionalità che rendono facile organizzare e accedere alle tue schede salvate.
+
+## Funzionalità
+- Salva schede: Salva tutte le tue schede aperte con un solo clic e ripristinale in seguito
+- Organizza schede: Crea collezioni e sottogruppi per organizzare le tue schede salvate
+- Cerca schede: Trova rapidamente le schede di cui hai bisogno utilizzando la funzione di ricerca
+- Sincronizza tra dispositivi: Accedi alle tue schede salvate da qualsiasi dispositivo con il tuo account
+- Modalità scura: Supporto per la modalità scura per un'esperienza di navigazione più confortevole
+- Personalizza: Cambia l'aspetto e il comportamento dell'estensione per soddisfare le tue esigenze
+
+Dai un'occhiata al nostro post sul blog riguardante tutte le nuove funzionalità e miglioramenti in Schede a parte 3.0 su:
+https://at.xfox111.net/tabs-aside-3-0
+
+## Ehi, è un software open-source!
+Se sai come migliorare questa estensione, puoi controllare il suo repository GitHub su:
+https://github.com/xfox111/TabsAsideExtension
+
+Consulta il registro delle modifiche alla versione su:
+https://github.com/xfox111/TabsAsideExtension/releases/latest
+
+
+
+<!-- Versione in testo ricco (Firefox) -->
+
+Radicata nella funzionalità originale del browser Microsoft Edge, questa estensione è cresciuta molto più di un semplice spazio di archiviazione temporaneo per le schede.
+
+Ti consente di salvare e gestire le tue schede in modo conveniente, fornendo una gamma di funzionalità che rendono facile organizzare e accedere alle tue schede salvate.
+
+**Funzionalità**
+- **Salva schede:** Salva tutte le tue schede aperte con un solo clic e ripristinale in seguito
+- **Organizza schede:** Crea collezioni e sottogruppi per organizzare le tue schede salvate
+- **Cerca schede:** Trova rapidamente le schede di cui hai bisogno utilizzando la funzione di ricerca
+- **Sincronizza tra dispositivi:** Accedi alle tue schede salvate da qualsiasi dispositivo con il tuo account
+- **Modalità scura:** Supporto per la modalità scura per un'esperienza di navigazione più confortevole
+- **Personalizza:** Cambia l'aspetto e il comportamento dell'estensione per soddisfare le tue esigenze
+
+Dai un'occhiata al nostro [post sul blog](https://at.xfox111.net/tabs-aside-3-0) riguardante tutte le nuove funzionalità e miglioramenti in Schede a parte 3.0
+
+**Ehi, è un software open-source!**
+Se sai come migliorare questa estensione, puoi controllare [il suo repository GitHub](https://github.com/xfox111/TabsAsideExtension)
+
+Consulta il [registro delle modifiche](https://github.com/xfox111/TabsAsideExtension/releases/latest)

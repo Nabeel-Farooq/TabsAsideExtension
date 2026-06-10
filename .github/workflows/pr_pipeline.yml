@@ -1,0 +1,75 @@
+name: PR check pipeline
+
+on:
+  pull_request:
+    branches: [ "main", "next" ]
+    paths-ignore:
+      - '**.md'
+      - '**.txt'
+      - "locales/*"
+      - 'LICENSE'
+      - 'PRIVACY'
+      - '**/cd_pipeline.yml'
+      - '**/dependabot.yml'
+      - '**/codeql-analysis.yml'
+      - '**/pr_next.yaml'
+      - '.vscode/*'
+      - '.devcontainer/*'
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: Targets
+        required: true
+        default: '["chrome","firefox"]'
+        type: choice
+        options:
+          - '["chrome","firefox"]'
+          - '["chrome"]'
+          - '["firefox"]'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: node:24
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(github.event.inputs.targets || '["chrome","firefox"]') }}
+
+    steps:
+      - uses: actions/checkout@main
+
+      - run: |
+          echo "WXT_GA4_API_SECRET=${{ secrets.GA4_SECRET }}" >> .env
+          echo "WXT_GA4_MEASUREMENT_ID=${{ secrets.GA4_MEASUREMENT_ID }}" >> .env
+
+      - run: npm install
+
+      # Patch for firefox dnd popup (see https://github.com/clauderic/dnd-kit/issues/1043)
+      - run: grep -v "this.windowListeners.add(EventName.Resize, this.handleCancel);" core.esm.js > core.esm.js.tmp && mv core.esm.js.tmp core.esm.js
+        working-directory: ./node_modules/@dnd-kit/core/dist
+        if: ${{ matrix.target == 'firefox' }}
+
+      # Patch for firefox analytics (see https://github.com/wxt-dev/wxt/pull/1808)
+      - run: sed -i 's|if (location.pathname === "/background.js")|if (location.pathname === "/background.js" \|\| location.pathname === "/_generated_background_page.html")|' index.mjs
+        working-directory: ./node_modules/@wxt-dev/analytics/dist
+        if: ${{ matrix.target == 'firefox' }}
+
+      - run: npm run zip -- -b ${{ matrix.target }}
+
+      - name: Drop artifacts (${{ matrix.target }})
+        uses: actions/upload-artifact@main
+        with:
+          name: ${{ matrix.target }}
+          path: ./.output/tabs-aside-*-${{ matrix.target }}.zip
+          include-hidden-files: true
+
+      - name: web-ext lint
+        if: ${{ matrix.target == 'firefox' }}
+        uses: kewisch/action-web-ext@main
+        with:
+          cmd: lint
+          source: ./.output/firefox-mv3
+          channel: listed
+
+      - run: npm audit
