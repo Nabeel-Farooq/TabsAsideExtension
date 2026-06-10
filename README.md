@@ -1,5 +1,3 @@
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/xfox111/TabsAsideExtension)](https://github.com/xfox111/TabsAsideExtension/releases/latest)
-[![GitHub last commit](https://img.shields.io/github/last-commit/xfox111/TabsAsideExtension?label=Last+update)](https://github.com/XFox111/TabsAsideExtension/commits/main)
 
 <picture>
 	<source media="(prefers-color-scheme: dark)" srcset="https://cdn.xfox111.net/projects/tabs-aside/dark.webp">
