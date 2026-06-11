@@ -1,20 +1,74 @@
+import { trackError } from "@/features/analytics";
 import { CollectionItem } from "@/models/CollectionModels";
-import { decompress } from "lzutf8";
+import getLogger from "@/utils/getLogger";
+
 import { collectionStorage } from "./collectionStorage";
-import getChunkKeys from "./getChunkKeys";
-import parseCollections from "./parseCollections";
+import getCollectionsFromCloud from "./getCollectionsFromCloud";
+import getCollectionsFromLocal from "./getCollectionsFromLocal";
+import saveCollectionsToLocal from "./saveCollectionsToLocal";
 
-export default async function getCollectionsFromCloud(): Promise<CollectionItem[]>
+const logger = getLogger("getCollections");
+
+export type CloudStorageIssueType =
+	| "parse_error"
+	| "merge_conflict";
+
+export default async function getCollections(): Promise<
+	[CollectionItem[], CloudStorageIssueType | null]
+>
 {
-	const chunkCount: number = await collectionStorage.chunkCount.getValue();
+	const cloudDisabled =
+		await collectionStorage.disableCloud.getValue();
 
-	if (chunkCount < 1)
-		return [];
+	if (cloudDisabled)
+	{
+		return [await getCollectionsFromLocal(), null];
+	}
 
-	const chunks: Record<string, string> =
-		await browser.storage.sync.get(getChunkKeys(0, chunkCount)) as Record<string, string>;
+	const [lastUpdatedLocal, lastUpdatedSync] =
+		await Promise.all([
+			collectionStorage.localLastUpdated.getValue(),
+			collectionStorage.syncLastUpdated.getValue()
+		]);
 
-	const data: string = decompress(Object.values(chunks).join(""), { inputEncoding: "Base64" });
+	if (lastUpdatedLocal === lastUpdatedSync)
+	{
+		return [await getCollectionsFromLocal(), null];
+	}
 
-	return parseCollections(data);
+	if (lastUpdatedLocal > lastUpdatedSync)
+	{
+		return [await getCollectionsFromLocal(), "merge_conflict"];
+	}
+
+	try
+	{
+		const collections =
+			await getCollectionsFromCloud();
+
+		await saveCollectionsToLocal(
+			collections,
+			lastUpdatedSync
+		);
+
+		return [collections, null];
+	}
+	catch (error)
+	{
+		logger("Failed to get cloud storage");
+		console.error(error);
+
+		if (error instanceof Error)
+		{
+			void trackError(
+				"cloud_get_error",
+				error
+			);
+		}
+
+		return [
+			await getCollectionsFromLocal(),
+			"parse_error"
+		];
+	}
 }
