@@ -1,6 +1,21 @@
 import { collectionStorage } from "./collectionStorage";
 
-export default function getChunkKeys(start: number = 0, end: number = collectionStorage.maxChunkCount): string[]
+export default function getChunkKeys(
+	start = 0,
+	end = collectionStorage.maxChunkCount
+): string[]
 {
-	return Array.from({ length: end - start }, (_, i) => "c" + (i + start));
+	if (start < 0 || end < start)
+	{
+		throw new RangeError(
+			`Invalid chunk range: start=${start}, end=${end}`
+		);
+	}
+
+	const length = end - start;
+
+	return Array.from(
+		{ length },
+		(_, index) => `c${start + index}`
+	);
 }
