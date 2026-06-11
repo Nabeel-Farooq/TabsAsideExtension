@@ -1,6 +1,6 @@
 import { collectionStorage } from "./collectionStorage";
 
-export default async function clearGraphicsStorage(): Promise<void>
+export default function clearGraphicsStorage(): Promise<void>
 {
-	await collectionStorage.graphics.removeValue();
+	return collectionStorage.graphics.removeValue();
 }
