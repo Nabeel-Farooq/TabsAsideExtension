@@ -1,49 +1,91 @@
 import { Unwatch, WatchCallback } from "wxt/utils/storage";
 
-const thumbnailCaptureEnabled: Pick<WxtStorageItem<boolean, Record<string, unknown>>, "getValue" | "watch" | "setValue"> =
+const THUMBNAIL_PERMISSIONS: Browser.permissions.Permissions = {
+	permissions: ["scripting"],
+	origins: ["<all_urls>"]
+};
+
+async function hasPermission(): Promise<boolean>
+{
+	return browser.permissions.contains(
+		THUMBNAIL_PERMISSIONS
+	);
+}
+
+const thumbnailCaptureEnabled: Pick<
+	WxtStorageItem<boolean, Record<string, unknown>>,
+	"getValue" | "watch" | "setValue"
+> = {
+	getValue(): Promise<boolean>
 	{
-		getValue: async (): Promise<boolean> =>
-			await browser.permissions.contains({ permissions: ["scripting"], origins: ["<all_urls>"] }),
+		return hasPermission();
+	},
 
-		watch: (cb: WatchCallback<boolean>): Unwatch =>
+	watch(cb: WatchCallback<boolean>): Unwatch
+	{
+		let previousState: boolean | undefined;
+
+		const listener = async (): Promise<void> =>
 		{
-			const listener = async (permissions: Browser.permissions.Permissions): Promise<void> =>
+			const currentState =
+				await hasPermission();
+
+			if (currentState !== previousState)
 			{
-				if (permissions.permissions?.includes("scripting") || permissions.origins?.includes("<all_urls>"))
-				{
-					const isGranted: boolean = await browser.permissions.contains({ permissions: ["scripting"], origins: ["<all_urls>"] });
-					console.log("thumbnailCaptureEnabled changed", isGranted);
-					cb(isGranted, !isGranted);
-				}
-			};
-
-			browser.permissions.onAdded.addListener(listener);
-			browser.permissions.onRemoved.addListener(listener);
-
-			return (): void =>
-			{
-				browser.permissions.onAdded.removeListener(listener);
-				browser.permissions.onRemoved.removeListener(listener);
-			};
-		},
-
-		setValue: async (value: boolean): Promise<void> =>
-		{
-			let result: boolean = false;
-
-			if (value)
-				result = await browser.permissions.request({ permissions: ["scripting"], origins: ["<all_urls>"] });
-			else
-			{
-				result = await browser.permissions.remove({ origins: ["<all_urls>"] });
-
-				if (import.meta.env.DEV)
-					await browser.permissions.request({ origins: ["http://localhost/*"] });
+				cb(currentState, previousState);
+				previousState = currentState;
 			}
+		};
 
-			if (!result)
-				throw new Error("Permission request was denied");
+		void listener();
+
+		browser.permissions.onAdded.addListener(
+			listener
+		);
+		browser.permissions.onRemoved.addListener(
+			listener
+		);
+
+		return (): void =>
+		{
+			browser.permissions.onAdded.removeListener(
+				listener
+			);
+			browser.permissions.onRemoved.removeListener(
+				listener
+			);
+		};
+	},
+
+	async setValue(value: boolean): Promise<void>
+	{
+		const success = value
+			? await browser.permissions.request(
+				THUMBNAIL_PERMISSIONS
+			)
+			: await browser.permissions.remove(
+				THUMBNAIL_PERMISSIONS
+			);
+
+		if (!success)
+		{
+			throw new Error(
+				`Thumbnail permission ${
+					value ? "request" : "removal"
+				} failed`
+			);
 		}
-	};
+
+		if (
+			!value &&
+			import.meta.env.DEV
+		)
+		{
+			await browser.permissions.request({
+				origins: ["http://localhost/*"]
+			});
+		}
+	}
+};
 
 export default thumbnailCaptureEnabled;
