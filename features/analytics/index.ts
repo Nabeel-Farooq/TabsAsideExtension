@@ -4,52 +4,66 @@ import { getUserProperties, userId } from "./utils/getUserProperties";
 
 export { analyticsPermission };
 
-export async function track(eventName: string, eventProperties?: Record<string, string>): Promise<void>
+type AnalyticsProperties = Record<
+	string,
+	string | number | boolean | null | undefined
+>;
+
+async function executeAnalytics(
+	action: () => Promise<void> | void,
+	errorMessage: string
+): Promise<void>
 {
 	try
 	{
-		if (!await analyticsPermission.getValue())
+		if (!(await analyticsPermission.getValue()))
 			return;
 
-		analytics.track(eventName, eventProperties);
+		await action();
 	}
-	catch (ex)
+	catch (error)
 	{
-		console.error("Failed to send analytics event", ex);
+		console.error(errorMessage, error);
 	}
 }
 
-export async function trackError(name: string, error: Error): Promise<void>
+export async function track(
+	eventName: string,
+	eventProperties?: AnalyticsProperties
+): Promise<void>
 {
-	try
-	{
-		if (!await analyticsPermission.getValue())
-			return;
+	await executeAnalytics(
+		() => analytics.track(eventName, eventProperties),
+		"Failed to send analytics event"
+	);
+}
 
-		analytics.track(name, {
-			name: error.name,
-			message: error.message,
-			stack: error.stack ?? "no_stack"
-		});
-	}
-	catch (ex)
-	{
-		console.error("Failed to send error report", ex);
-	}
+export async function trackError(
+	eventName: string,
+	error: Error
+): Promise<void>
+{
+	await executeAnalytics(
+		() =>
+			analytics.track(eventName, {
+				name: error.name,
+				message: error.message,
+				stack: error.stack?.slice(0, 5000) ?? "no_stack"
+			}),
+		"Failed to send error report"
+	);
 }
 
 export async function trackPage(pageName: string): Promise<void>
 {
-	try
+	await executeAnalytics(async () =>
 	{
-		if (!await analyticsPermission.getValue())
+		const id = await userId.getValue();
+
+		if (!id)
 			return;
 
-		analytics.identify(await userId.getValue() as string, await getUserProperties());
+		analytics.identify(id, await getUserProperties());
 		analytics.page(pageName);
-	}
-	catch (ex)
-	{
-		console.error("Failed to send page view", ex);
-	}
+	}, "Failed to send page view");
 }
